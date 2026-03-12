@@ -1,113 +1,105 @@
-# ClipSync 📋
+# Clipra 📋
 
 Cihazlar arası gerçek zamanlı clipboard senkronizasyon uygulaması.
 
+🌐 **Web:** https://clipra.up.railway.app
+⬇️ **Windows Agent:** [Clipra.exe indir](https://github.com/tuncaygunesdev-debug/clipra/releases/download/v1.0.0/Clipra.exe)
+
+---
+
 ## Özellikler
 
-- 🔄 Gerçek zamanlı senkronizasyon (Socket.io)
+- ⚡ Gerçek zamanlı senkronizasyon (Socket.io)
 - 🔐 JWT tabanlı kullanıcı sistemi
-- 📱 Mobil uyumlu responsive tasarım
-- 🤖 Python masaüstü agent (otomatik Ctrl+C yakalama)
+- 📱 Responsive koyu tema arayüz
+- 🖥️ Windows masaüstü agent (otomatik Ctrl+C yakalama)
 - 📖 Son 100 clipboard geçmişi
-- 🗑 Tek tek veya toplu silme
+- 🗑️ Tek tek veya toplu silme
+
+---
+
+## Nasıl Kullanılır?
+
+1. https://clipra.up.railway.app adresine git
+2. Hesap oluştur veya giriş yap
+3. Kopyaladığın metni yapıştır → **Save & sync** butonuna bas
+4. Aynı hesapla giriş yapan diğer cihazlarda anında görünür
+
+### Windows Agent
+Ctrl+C yaptığın her metni otomatik senkronize etmek için:
+
+1. [Clipra.exe](https://github.com/tuncaygunesdev-debug/clipra/releases/download/v1.0.0/Clipra.exe) dosyasını indir
+2. Çift tıkla, e-posta ve şifrenle giriş yap
+3. Sistem tepsisinde çalışmaya devam eder
+
+---
 
 ## Proje Yapısı
 
 ```
-clipSync/
+clipra/
 ├── backend/
-│   ├── middleware/
-│   │   └── auth.js          # JWT doğrulama
+│   ├── middleware/auth.js       # JWT doğrulama
 │   ├── models/
-│   │   ├── User.js          # Kullanıcı modeli
-│   │   └── Clipboard.js     # Clipboard modeli
+│   │   ├── User.js              # Kullanıcı modeli
+│   │   └── Clipboard.js         # Clipboard modeli (max 100)
 │   ├── routes/
-│   │   ├── auth.js          # Kayıt/giriş route'ları
-│   │   └── clipboard.js     # Clipboard CRUD route'ları
-│   ├── server.js            # Ana sunucu + Socket.io
-│   ├── package.json
+│   │   ├── auth.js              # Kayıt / giriş
+│   │   └── clipboard.js         # CRUD + Socket.io
+│   ├── server.js                # Ana sunucu
 │   └── .env.example
 ├── frontend/
 │   ├── public/
-│   │   └── index.html
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── AuthPage.js  # Giriş/kayıt sayfası
-│   │   │   └── Dashboard.js # Ana uygulama
-│   │   ├── context/
-│   │   │   └── AuthContext.js
-│   │   ├── hooks/
-│   │   │   └── useSocket.js
-│   │   ├── App.js
-│   │   ├── App.css
-│   │   └── index.js
-│   └── package.json
+│   │   ├── index.html
+│   │   └── favicon.svg
+│   └── src/
+│       ├── components/
+│       │   ├── AuthPage.js      # Giriş / kayıt
+│       │   └── Dashboard.js     # Ana uygulama
+│       ├── context/AuthContext.js
+│       ├── hooks/useSocket.js
+│       ├── App.js
+│       └── App.css
 └── agent/
-    ├── agent.py             # Python masaüstü agent
-    ├── requirements.txt
-    └── .env.example
+    ├── clipra_agent.py          # Windows tray uygulaması
+    └── requirements.txt
 ```
-
-## Kurulum
-
-### Gereksinimler
-
-- Node.js 18+
-- MongoDB (yerel veya MongoDB Atlas)
-- Python 3.8+ (masaüstü agent için)
 
 ---
 
-### 1. Backend
+## Kendi Sunucuna Kur
 
+### Gereksinimler
+- Node.js 18+
+- MongoDB (yerel veya Atlas)
+- Python 3.8+ (agent için)
+
+### Backend
 ```bash
 cd backend
 npm install
 cp .env.example .env
-# .env dosyasını düzenle (MongoDB URI ve JWT_SECRET)
+# .env dosyasını düzenle
 npm run dev
 ```
 
-### 2. Frontend
-
+### Frontend
 ```bash
 cd frontend
 npm install
 npm start
 ```
 
-Frontend http://localhost:3000 adresinde açılacak.
-
-### 3. Masaüstü Agent (İsteğe bağlı)
-
+### Agent
 ```bash
 cd agent
 pip install -r requirements.txt
-cp .env.example .env
-# .env dosyasına API_URL ve (isteğe bağlı) CLIPSYNC_TOKEN ekle
-python agent.py
+py clipra_agent.py
 ```
 
-Agent ilk çalıştırmada e-posta ve şifre isteyecek, ardından clipboard'u izlemeye başlayacak.
-
 ---
 
-## Kullanım
-
-1. Tarayıcıdan http://localhost:3000 aç
-2. Hesap oluştur veya giriş yap
-3. Kopyaladığın metni textarea'ya yapıştır (Ctrl+V) → Kaydet & Senkronize Et
-4. Aynı hesapla giriş yapan diğer cihazlarda anında görünür
-
-### Kısayollar
-
-- `Ctrl+V` – Metni otomatik textarea'ya yapıştırır (sayfa odaklanmışsa)
-- `Ctrl+Enter` – Aktif textarea'dayken kaydet
-- Masaüstü agent açıksa, `Ctrl+C` yaptığın her metin otomatik senkronize edilir
-
----
-
-## API Endpoint'leri
+## API
 
 | Method | Endpoint | Açıklama |
 |--------|----------|----------|
@@ -122,14 +114,15 @@ Agent ilk çalıştırmada e-posta ve şifre isteyecek, ardından clipboard'u iz
 
 | Event | Yön | Açıklama |
 |-------|-----|----------|
-| clipboard:new | Server → Client | Yeni clipboard girişi |
+| clipboard:new | Server → Client | Yeni giriş |
 | clipboard:deleted | Server → Client | Giriş silindi |
 | clipboard:cleared | Server → Client | Tümü silindi |
 
-## Üretim Ortamı İçin
+---
 
-1. `.env`'de `JWT_SECRET`'i güçlü bir değerle değiştir
-2. MongoDB Atlas kullan
-3. `CLIENT_URL`'i production domain'inle güncelle
-4. Frontend'i build et: `npm run build`
-5. Nginx veya benzeri bir reverse proxy kullan
+## Teknolojiler
+
+**Backend:** Node.js, Express, Socket.io, MongoDB, JWT  
+**Frontend:** React, Axios, Socket.io-client  
+**Agent:** Python, pystray, Pillow, tkinter  
+**Deploy:** Railway, MongoDB Atlas
