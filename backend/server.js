@@ -45,11 +45,11 @@ io.on('connection', (socket) => {
   });
 });
 
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 mongoose
   .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/clipsync')
-  .then(() => {
-    console.log('MongoDB connected');
-    const PORT = process.env.PORT || 5000;
-    server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-  })
+  .then(() => console.log('MongoDB connected'))
   .catch((err) => console.error('MongoDB connection error:', err));
+
