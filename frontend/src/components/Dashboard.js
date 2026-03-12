@@ -8,11 +8,18 @@ function formatTime(dateStr) {
   const date = new Date(dateStr);
   const now = new Date();
   const diff = now - date;
-  if (diff < 60000) return 'Az önce';
-  if (diff < 3600000) return `${Math.floor(diff / 60000)} dk önce`;
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)} sa önce`;
-  return date.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  return date.toLocaleDateString('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
+
+const ClipraLogo = () => (
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 2H5a2 2 0 00-2 2v4a2 2 0 002 2h4a2 2 0 002-2V4a2 2 0 00-2-2zM9 14H5a2 2 0 00-2 2v4a2 2 0 002 2h4a2 2 0 002-2v-4a2 2 0 00-2-2zM21 2h-4a2 2 0 00-2 2v4a2 2 0 002 2h4a2 2 0 002-2V4a2 2 0 00-2-2zM14 17h8M18 13v8"
+      fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
 
 export default function Dashboard() {
   const { user, token, logout } = useAuth();
@@ -28,22 +35,19 @@ export default function Dashboard() {
       const res = await axios.get('/api/clipboard');
       setEntries(res.data);
     } catch {
-      toast.error('Geçmiş yüklenemedi');
+      toast.error('Failed to load history');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchEntries();
-  }, [fetchEntries]);
+  useEffect(() => { fetchEntries(); }, [fetchEntries]);
 
-  // Clipboard paste detection
   useEffect(() => {
     const handlePaste = (e) => {
       if (document.activeElement === textareaRef.current) return;
-      const pastedText = e.clipboardData?.getData('text');
-      if (pastedText) setText(pastedText);
+      const pasted = e.clipboardData?.getData('text');
+      if (pasted) setText(pasted);
     };
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
@@ -54,24 +58,16 @@ export default function Dashboard() {
       if (prev.find((e) => e._id === entry._id)) return prev;
       return [entry, ...prev].slice(0, 100);
     });
-    toast.success('Yeni clipboard girişi senkronize edildi', { icon: '📋' });
+    toast('New entry synced', { icon: '⚡' });
   }, []);
 
-  const onDeleted = useCallback((id) => {
-    setEntries((prev) => prev.filter((e) => e._id !== id));
-  }, []);
-
-  const onCleared = useCallback(() => {
-    setEntries([]);
-  }, []);
+  const onDeleted = useCallback((id) => setEntries((prev) => prev.filter((e) => e._id !== id)), []);
+  const onCleared = useCallback(() => setEntries([]), []);
 
   useSocket(token, onNew, onDeleted, onCleared);
 
   const handleSave = async () => {
-    if (!text.trim()) {
-      toast.error('Metin boş olamaz');
-      return;
-    }
+    if (!text.trim()) { toast.error('Text is empty'); return; }
     setSaving(true);
     try {
       const res = await axios.post('/api/clipboard', { text: text.trim(), source: 'web' });
@@ -80,9 +76,9 @@ export default function Dashboard() {
         return [res.data, ...prev].slice(0, 100);
       });
       setText('');
-      toast.success('Kaydedildi!');
+      toast.success('Saved & synced');
     } catch {
-      toast.error('Kaydedilemedi');
+      toast.error('Failed to save');
     } finally {
       setSaving(false);
     }
@@ -92,10 +88,10 @@ export default function Dashboard() {
     try {
       await navigator.clipboard.writeText(entry.text);
       setCopiedId(entry._id);
-      toast.success('Kopyalandı!');
+      toast.success('Copied');
       setTimeout(() => setCopiedId(null), 2000);
     } catch {
-      toast.error('Kopyalanamadı');
+      toast.error('Copy failed');
     }
   };
 
@@ -103,47 +99,45 @@ export default function Dashboard() {
     try {
       await axios.delete(`/api/clipboard/${id}`);
       setEntries((prev) => prev.filter((e) => e._id !== id));
-      toast.success('Silindi');
     } catch {
-      toast.error('Silinemedi');
+      toast.error('Delete failed');
     }
   };
 
   const handleClearAll = async () => {
-    if (!window.confirm('Tüm clipboard geçmişi silinsin mi?')) return;
+    if (!window.confirm('Clear all clipboard history?')) return;
     try {
       await axios.delete('/api/clipboard');
       setEntries([]);
-      toast.success('Geçmiş temizlendi');
+      toast.success('Cleared');
     } catch {
-      toast.error('Temizlenemedi');
+      toast.error('Failed to clear');
     }
   };
 
   const handleKeyDown = (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      handleSave();
-    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleSave();
   };
 
   return (
     <div className="dashboard">
       <header className="header">
         <div className="header-logo">
-          <span className="logo-icon">⌘</span>
-          <span>ClipSync</span>
+          <div className="header-logo-mark"><ClipraLogo /></div>
+          <span>Clipra</span>
         </div>
         <div className="header-right">
+          <div className="status-dot">synced</div>
           <span className="user-email">{user?.email}</span>
-          <button className="logout-btn" onClick={logout}>Çıkış</button>
+          <button className="logout-btn" onClick={logout}>Sign out</button>
         </div>
       </header>
 
       <main className="main">
         <section className="input-section">
-          <div className="input-label">
-            <span>📋 Metni buraya yapıştır veya yaz</span>
-            <span className="shortcut-hint">Ctrl+Enter ile kaydet</span>
+          <div className="input-header">
+            <span className="input-title">New entry</span>
+            <span className="shortcut-badge">⌘ Enter to save</span>
           </div>
           <textarea
             ref={textareaRef}
@@ -151,48 +145,35 @@ export default function Dashboard() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Kopyaladığın metni buraya yapıştır (Ctrl+V)..."
-            rows={5}
+            placeholder="Paste or type anything..."
+            rows={4}
           />
-          <div className="input-actions">
-            <span className="char-count">{text.length} karakter</span>
-            <button
-              className="save-btn"
-              onClick={handleSave}
-              disabled={saving || !text.trim()}
-            >
-              {saving ? (
-                <span className="spinner" />
-              ) : (
-                <>💾 Kaydet & Senkronize Et</>
-              )}
+          <div className="input-footer">
+            <span className="char-count">{text.length} chars</span>
+            <button className="save-btn" onClick={handleSave} disabled={saving || !text.trim()}>
+              {saving ? <span className="spinner" /> : <>Save & sync</>}
             </button>
           </div>
         </section>
 
         <section className="history-section">
           <div className="history-header">
-            <h2>
-              📖 Geçmiş
+            <div className="history-title">
+              History
               <span className="count-badge">{entries.length}</span>
-            </h2>
+            </div>
             {entries.length > 0 && (
-              <button className="clear-btn" onClick={handleClearAll}>
-                🗑 Tümünü Sil
-              </button>
+              <button className="clear-btn" onClick={handleClearAll}>Clear all</button>
             )}
           </div>
 
           {loading ? (
-            <div className="loading-state">
-              <div className="spinner large" />
-              <p>Yükleniyor...</p>
-            </div>
+            <div className="loading-state"><div className="spinner large" /></div>
           ) : entries.length === 0 ? (
             <div className="empty-state">
-              <span className="empty-icon">📭</span>
-              <p>Henüz clipboard geçmişin yok</p>
-              <small>Metin ekleyince burada görünecek</small>
+              <span className="empty-icon">◻</span>
+              <p>No clipboard history yet</p>
+              <small>Save something to get started</small>
             </div>
           ) : (
             <ul className="entry-list">
@@ -208,13 +189,10 @@ export default function Dashboard() {
                       className={`action-btn copy ${copiedId === entry._id ? 'copied' : ''}`}
                       onClick={() => handleCopy(entry)}
                     >
-                      {copiedId === entry._id ? '✓ Kopyalandı' : '📋 Kopyala'}
+                      {copiedId === entry._id ? '✓ Copied' : 'Copy'}
                     </button>
-                    <button
-                      className="action-btn delete"
-                      onClick={() => handleDelete(entry._id)}
-                    >
-                      🗑 Sil
+                    <button className="action-btn delete" onClick={() => handleDelete(entry._id)}>
+                      Delete
                     </button>
                   </div>
                 </li>

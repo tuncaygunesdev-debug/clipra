@@ -6,15 +6,7 @@ import './App.css';
 
 function AppContent() {
   const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="app-loading">
-        <div className="spinner large" />
-      </div>
-    );
-  }
-
+  if (loading) return <div className="app-loading"><div className="spinner large" /></div>;
   return user ? <Dashboard /> : <AuthPage />;
 }
 
@@ -25,12 +17,15 @@ export default function App() {
         position="top-right"
         toastOptions={{
           style: {
-            background: '#1a1a2e',
-            color: '#e2e8f0',
-            border: '1px solid #2d2d4e',
-            borderRadius: '12px',
-            fontFamily: "'JetBrains Mono', monospace",
+            background: '#12121f',
+            color: '#f0f0ff',
+            border: '1px solid #1e1e35',
+            borderRadius: '10px',
+            fontFamily: "'Inter', sans-serif",
+            fontSize: '13px',
           },
+          success: { iconTheme: { primary: '#00d68f', secondary: '#12121f' } },
+          error: { iconTheme: { primary: '#ff4d6d', secondary: '#12121f' } },
         }}
       />
       <AppContent />
