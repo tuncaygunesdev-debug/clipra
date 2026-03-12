@@ -97,112 +97,87 @@ def create_icon_image():
     return img
 
 def show_history_window(icon=None, item=None):
-    win = tk.Toplevel()
-    win.title("ClipSync — Geçmiş")
-    win.geometry("500x500")
-    win.configure(bg="#0d0d1a")
-    win.lift()
-    win.focus_force()
+    def _open():
+        root = tk.Tk()
+        root.title("Clipra — History")
+        root.geometry("520x560")
+        root.configure(bg="#080810")
+        root.lift()
+        root.focus_force()
 
-    tk.Label(win, text="📋 Clipboard Geçmişi", bg="#0d0d1a", fg="#e2e8f0",
-             font=("Courier", 14, "bold")).pack(pady=12)
+        tk.Label(root, text="Clipboard History", bg="#080810", fg="#f0f0ff",
+                 font=("Inter", 14, "bold")).pack(pady=14)
 
-    frame = tk.Frame(win, bg="#0d0d1a")
-    frame.pack(fill="both", expand=True, padx=12, pady=4)
+        frame = tk.Frame(root, bg="#080810")
+        frame.pack(fill="both", expand=True, padx=14, pady=4)
 
-    scrollbar = tk.Scrollbar(frame)
-    scrollbar.pack(side="right", fill="y")
+        scrollbar = tk.Scrollbar(frame)
+        scrollbar.pack(side="right", fill="y")
 
-    listbox = tk.Listbox(frame, bg="#13132a", fg="#e2e8f0", font=("Courier", 10),
-                         selectbackground="#6c63ff", yscrollcommand=scrollbar.set,
-                         borderwidth=0, highlightthickness=0)
-    listbox.pack(fill="both", expand=True)
-    scrollbar.config(command=listbox.yview)
+        listbox = tk.Listbox(frame, bg="#12121f", fg="#f0f0ff", font=("Courier", 10),
+                             selectbackground="#5b4eff", yscrollcommand=scrollbar.set,
+                             borderwidth=0, highlightthickness=0, activestyle="none")
+        listbox.pack(fill="both", expand=True)
+        scrollbar.config(command=listbox.yview)
 
-    entries = []
+        entries = []
 
-    def load():
-        listbox.delete(0, tk.END)
-        entries.clear()
-        try:
-            data = api_get_history()
-            for e in data:
-                text = e["text"][:80].replace("\n", " ")
-                listbox.insert(tk.END, f"  {text}")
-                entries.append(e)
-        except Exception as ex:
-            listbox.insert(tk.END, f"Hata: {ex}")
-
-    def copy_selected():
-        sel = listbox.curselection()
-        if sel and entries:
-            pyperclip.copy(entries[sel[0]]["text"])
-            state["last_clip"] = entries[sel[0]]["text"]
-            messagebox.showinfo("ClipSync", "Kopyalandı!", parent=win)
-
-    def delete_selected():
-        sel = listbox.curselection()
-        if sel and entries:
+        def load():
+            listbox.delete(0, tk.END)
+            entries.clear()
             try:
-                api_delete(entries[sel[0]]["_id"])
-                load()
+                data = api_get_history()
+                for e in data:
+                    text = e["text"][:90].replace("\n", " ")
+                    listbox.insert(tk.END, f"  {text}")
+                    entries.append(e)
             except Exception as ex:
-                messagebox.showerror("Hata", str(ex), parent=win)
+                listbox.insert(tk.END, f"Error: {ex}")
 
-    btn_frame = tk.Frame(win, bg="#0d0d1a")
-    btn_frame.pack(pady=10)
+        def copy_selected():
+            sel = listbox.curselection()
+            if sel and entries:
+                pyperclip.copy(entries[sel[0]]["text"])
+                state["last_clip"] = entries[sel[0]]["text"]
+                tk.messagebox.showinfo("Clipra", "Copied!", parent=root)
 
-    tk.Button(btn_frame, text="📋 Kopyala", bg="#6c63ff", fg="white",
-              font=("Courier", 10), relief="flat", padx=12, pady=6,
-              command=copy_selected).pack(side="left", padx=6)
+        def delete_selected():
+            sel = listbox.curselection()
+            if sel and entries:
+                try:
+                    api_delete(entries[sel[0]]["_id"])
+                    load()
+                except Exception as ex:
+                    tk.messagebox.showerror("Error", str(ex), parent=root)
 
-    tk.Button(btn_frame, text="🗑 Sil", bg="#ff6584", fg="white",
-              font=("Courier", 10), relief="flat", padx=12, pady=6,
-              command=delete_selected).pack(side="left", padx=6)
+        btn_frame = tk.Frame(root, bg="#080810")
+        btn_frame.pack(pady=10)
 
-    tk.Button(btn_frame, text="🔄 Yenile", bg="#43e97b", fg="#0d0d1a",
-              font=("Courier", 10), relief="flat", padx=12, pady=6,
-              command=load).pack(side="left", padx=6)
+        tk.Button(btn_frame, text="Copy", bg="#5b4eff", fg="white",
+                  font=("Inter", 10), relief="flat", padx=14, pady=7,
+                  command=copy_selected, cursor="hand2").pack(side="left", padx=6)
 
-    load()
+        tk.Button(btn_frame, text="Delete", bg="#ff4d6d", fg="white",
+                  font=("Inter", 10), relief="flat", padx=14, pady=7,
+                  command=delete_selected, cursor="hand2").pack(side="left", padx=6)
 
-def logout_action(icon, item):
-    state["running"] = False
-    clear_config()
-    icon.stop()
-    show_login_window()
+        tk.Button(btn_frame, text="Refresh", bg="#1a1a2e", fg="#f0f0ff",
+                  font=("Inter", 10), relief="flat", padx=14, pady=7,
+                  command=load, cursor="hand2").pack(side="left", padx=6)
 
-def quit_action(icon, item):
-    state["running"] = False
-    icon.stop()
-    sys.exit(0)
+        load()
+        root.mainloop()
 
-def start_tray():
-    image = create_icon_image()
-    user_email = state["user"].get("email", "Kullanıcı") if state["user"] else "Kullanıcı"
+    threading.Thread(target=_open, daemon=True).start()
+```
 
-    menu = pystray.Menu(
-        pystray.MenuItem(f"👤 {user_email}", None, enabled=False),
-        pystray.Menu.SEPARATOR,
-        pystray.MenuItem("📋 Clipboard Geçmişi", show_history_window),
-        pystray.Menu.SEPARATOR,
-        pystray.MenuItem("🚪 Çıkış Yap", logout_action),
-        pystray.MenuItem("❌ Kapat", quit_action),
-    )
-
-    icon = pystray.Icon("ClipSync", image, "ClipSync — Çalışıyor", menu)
-
-    # Clipboard izleyiciyi başlat
-    state["running"] = True
-    watcher = threading.Thread(target=clipboard_watcher, daemon=True)
-    watcher.start()
-
-    icon.run()
-
+Değiştirdikten sonra tekrar exe oluştur:
+```
+py -m PyInstaller --onefile --windowed --name "Clipra" clipsync_tray.py
 # ─── Giriş Penceresi ─────────────────────────────────────
 def show_login_window():
     root = tk.Tk()
-    root.title("ClipSync")
+    root.title("Clipra")
     root.geometry("380x460")
     root.configure(bg="#0d0d1a")
     root.resizable(False, False)
@@ -216,7 +191,7 @@ def show_login_window():
     # Logo
     tk.Label(root, text="⌘", bg="#0d0d1a", fg="#6c63ff",
              font=("Courier", 40)).pack(pady=(30, 5))
-    tk.Label(root, text="ClipSync", bg="#0d0d1a", fg="#e2e8f0",
+    tk.Label(root, text="Clipra", bg="#0d0d1a", fg="#e2e8f0",
              font=("Courier", 22, "bold")).pack()
     tk.Label(root, text="Cihazlar arası clipboard senkronizasyonu",
              bg="#0d0d1a", fg="#7c8db5", font=("Courier", 9)).pack(pady=(4, 24))

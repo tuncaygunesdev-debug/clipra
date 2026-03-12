@@ -129,6 +129,13 @@ export default function Dashboard() {
         <div className="header-right">
           <div className="status-dot">synced</div>
           <span className="user-email">{user?.email}</span>
+          <a
+            href="https://github.com/tuncaygunesdev-debug/clipra/releases/download/v1.0.0/Clipra.exe"
+            className="download-btn"
+            download
+          >
+            ↓ Download for Windows
+          </a>
           <button className="logout-btn" onClick={logout}>Sign out</button>
         </div>
       </header>

@@ -288,6 +288,24 @@ body::before {
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
+.download-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--text-muted); font-size: 12px;
+  cursor: pointer; transition: all var(--transition);
+  font-family: var(--sans);
+  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+
+.download-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(91, 78, 255, 0.06);
+}
+
 .logout-btn {
   padding: 6px 14px;
   background: transparent;
